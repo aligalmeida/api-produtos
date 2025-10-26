@@ -7,7 +7,6 @@ function verificarJWT(req, res, next) {
   if (scheme !== 'Bearer' || !token) {
     return res.status(401).json({ msg: 'Token ausente ou malformado' });
   }
-
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.user = { id: payload.sub, username: payload.username };
@@ -18,3 +17,6 @@ function verificarJWT(req, res, next) {
 }
 
 module.exports = { verificarJWT };
+
+
+

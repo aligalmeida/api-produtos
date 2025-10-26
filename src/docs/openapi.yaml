@@ -1,0 +1,257 @@
+openapi: 3.0.3
+info:
+  title: API Produtos
+  version: "1.0.0"
+  description: >
+    API RESTful para gerenciamento de produtos.  
+    Implementa autenticação JWT e segue boas práticas REST.
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Servidor local (desenvolvimento)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Produto:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6701f5a0ab12cd34ef567890
+        nome:
+          type: string
+          example: Teclado Gamer
+        preco:
+          type: number
+          example: 249.9
+        sku:
+          type: string
+          example: TEC-123456
+        categoria:
+          type: string
+          enum: [frutas, bebidas, higiene, outros]
+          example: outros
+        estoque:
+          type: integer
+          minimum: 0
+          example: 10
+        ativo:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-10-26T12:00:00.000Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2025-10-26T12:00:00.000Z
+      required: [nome, preco]
+    Error:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: Mensagem de erro
+
+paths:
+  /auth/login:
+    post:
+      summary: Autentica e gera token JWT
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  example: admin
+                password:
+                  type: string
+                  example: admin123
+      responses:
+        '200':
+          description: Token emitido com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        '422':
+          description: Campos ausentes
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /produtos:
+    get:
+      summary: Lista todos os produtos
+      tags: [Produtos]
+      responses:
+        '200':
+          description: Lista de produtos retornada
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Produto' }
+    post:
+      summary: Cria um novo produto
+      tags: [Produtos]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Produto'
+              required: [nome, preco]
+      responses:
+        '201':
+          description: Produto criado com sucesso
+          headers:
+            Location:
+              description: URL do novo recurso
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Produto' }
+        '401':
+          description: Não autorizado (token ausente ou inválido)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: Conflito (nome duplicado)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /produtos/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+        description: ObjectId do produto
+    get:
+      summary: Obtém um produto pelo ID
+      tags: [Produtos]
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Produto' }
+        '400':
+          description: Parâmetro inválido
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    put:
+      summary: Atualiza todos os campos de um produto (PUT)
+      tags: [Produtos]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Produto'
+              required: [nome, preco]
+      responses:
+        '200':
+          description: Produto atualizado com sucesso
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Produto' }
+        '401':
+          description: Não autorizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: Nome duplicado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    patch:
+      summary: Atualiza parcialmente um produto (PATCH)
+      tags: [Produtos]
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Produto' }
+      responses:
+        '200':
+          description: Produto atualizado parcialmente
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Produto' }
+        '401':
+          description: Não autorizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      summary: Remove um produto (estoque deve ser 0)
+      tags: [Produtos]
+      security: [ { bearerAuth: [] } ]
+      responses:
+        '204':
+          description: Produto removido
+        '401':
+          description: Não autorizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: Estoque > 0 (não permitido)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }

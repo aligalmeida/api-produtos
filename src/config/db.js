@@ -14,7 +14,7 @@ async function connectDB() {
     throw new Error('Variáveis do banco ausentes no .env');
   }
   await mongoose.connect(uri);
-  console.log('✅ Conectado ao MongoDB Atlas!');
 }
 
 module.exports = { connectDB };
+
