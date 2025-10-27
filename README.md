@@ -257,7 +257,18 @@ DELETE /api/v1/produtos/:id
   - `tests/integration/produtos.routes.test.js`
   - `tests/setup/db.js` (config memória)
   - `tests/utils/testApp.js` (helper de login, supertest)
+  - 
+### Testes (unit e integração)
 
+- **Ambiente:** `NODE_ENV=test`
+- **Banco:** mongodb-memory-server (sem necessidade de instância externa)
+- **Rodar todos:**
+  ```bash
+  npm test
+
+### Rodar apenas unitários:
+```bash
+npm run test:unit
 ---
 
 ## Seed de Dados
