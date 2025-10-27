@@ -1,3 +1,4 @@
+// tests/integration/produtos.routes.test.js
 const { connect, closeDatabase, clearDatabase } = require('../setup/db');
 const { app, request, loginAndGetToken } = require('../utils/testApp');
 const Produto = require('../../src/models/produtoModel');
@@ -24,7 +25,10 @@ describe('Produtos Routes/Controllers', () => {
   });
 
   test('GET /api/v1/produtos - lista vazia inicialmente', async () => {
-    const res = await agent.get('/api/v1/produtos');
+    const res = await agent
+      .get('/api/v1/produtos')
+      .set('Accept', 'application/json'); // <-- CORREÇÃO: Força a resposta JSON
+
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBe(0);
@@ -41,7 +45,6 @@ describe('Produtos Routes/Controllers', () => {
         estoque: 10,
         ativo: true
       });
-
     expect(res.status).toBe(201);
     expect(res.headers.location).toMatch(/\/api\/v1\/produtos\/[a-f0-9]{24}$/i);
     expect(res.body._id).toBeDefined();
@@ -50,7 +53,11 @@ describe('Produtos Routes/Controllers', () => {
 
   test('GET /api/v1/produtos - lista com 1 item após criação', async () => {
     await Produto.create({ nome: 'Mouse', nomeLower: 'mouse', preco: 99.9, categoria: 'outros' });
-    const res = await agent.get('/api/v1/produtos');
+    
+    const res = await agent
+      .get('/api/v1/produtos')
+      .set('Accept', 'application/json'); // <-- CORREÇÃO: Força a resposta JSON
+
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(1);
     expect(res.body[0].nome).toBe('Mouse');
@@ -58,7 +65,10 @@ describe('Produtos Routes/Controllers', () => {
 
   test('GET /api/v1/produtos/:id - retorna item existente', async () => {
     const p = await Produto.create({ nome: 'Monitor', nomeLower: 'monitor', preco: 899.9, categoria: 'outros' });
-    const res = await agent.get(`/api/v1/produtos/${p._id}`);
+    
+    // Esta rota (exibir) não precisa do 'Accept' pois sempre retorna JSON
+    const res = await agent.get(`/api/v1/produtos/${p._id}`); 
+    
     expect(res.status).toBe(200);
     expect(res.body.nome).toBe('Monitor');
   });
@@ -86,7 +96,6 @@ describe('Produtos Routes/Controllers', () => {
       .patch(`/api/v1/produtos/${p._id}`)
       .set('Authorization', `Bearer ${token}`)
       .send({ estoque: 7 });
-
     expect(res.status).toBe(200);
     expect(res.body.estoque).toBe(7);
   });
@@ -96,7 +105,6 @@ describe('Produtos Routes/Controllers', () => {
     const res = await agent
       .delete(`/api/v1/produtos/${p._id}`)
       .set('Authorization', `Bearer ${token}`);
-
     expect(res.status).toBe(409);
   });
 
@@ -105,7 +113,6 @@ describe('Produtos Routes/Controllers', () => {
     const res = await agent
       .delete(`/api/v1/produtos/${p._id}`)
       .set('Authorization', `Bearer ${token}`);
-
     expect(res.status).toBe(204);
     const existe = await Produto.findById(p._id);
     expect(existe).toBeNull();
@@ -115,7 +122,6 @@ describe('Produtos Routes/Controllers', () => {
     const res = await agent
       .post('/api/v1/produtos')
       .send({ nome: 'Fonte', preco: 250 });
-
     expect(res.status).toBe(401);
   });
 
@@ -124,18 +130,15 @@ describe('Produtos Routes/Controllers', () => {
       .post('/api/v1/produtos')
       .set('Authorization', `Bearer ${token}`)
       .send({ nome: 'A', preco: -10 }); // inválidos
-
     expect(res.status).toBe(422);
   });
 
   test('POST /api/v1/produtos - 409 nome duplicado', async () => {
     await Produto.create({ nome: 'Headset', nomeLower: 'headset', preco: 199, categoria: 'outros' });
-
     const res = await agent
       .post('/api/v1/produtos')
       .set('Authorization', `Bearer ${token}`)
       .send({ nome: 'Headset', preco: 199, categoria: 'outros' });
-
     expect(res.status).toBe(409);
   });
 });
