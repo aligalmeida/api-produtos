@@ -1,3 +1,7 @@
+/**
+ * Módulo de conexão com MongoDB (connectDB / disconnectDB).
+ * Feature: config-db
+ */
 const mongoose = require('mongoose');
 
 const {
