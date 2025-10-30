@@ -1,5 +1,3 @@
-// Validações de Produto (create, PUT, PATCH) - feature/validators-produtos
-
 const mongoose = require('mongoose');
 const { CATEGORIAS } = require('../models/produtoModel');
 
