@@ -1,0 +1,297 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API Produtos",
+    "description": "Documentação da API de Produtos (v1) com autenticação JWT nas rotas de escrita.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "http://localhost:3000", "description": "Ambiente local" }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Autenticação (gerar token JWT)" },
+    { "name": "Produtos", "description": "CRUD completo de produtos" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Produto": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66f0d0bff7c1a1b8a6d0e91d" },
+          "nome": { "type": "string", "example": "Camiseta Azul" },
+          "categoria": { "type": "string", "example": "Vestuário" },
+          "preco": { "type": "number", "format": "double", "example": 79.9 },
+          "estoque": { "type": "integer", "example": 50 },
+          "ativo": { "type": "boolean", "example": true },
+          "sku": { "type": "string", "example": "CAM-AZUL-001" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["nome"]
+      },
+      "ProdutoInput": {
+        "type": "object",
+        "properties": {
+          "nome": { "type": "string" },
+          "categoria": { "type": "string" },
+          "preco": { "type": "number", "format": "double" },
+          "estoque": { "type": "integer" },
+          "ativo": { "type": "boolean" },
+          "sku": { "type": "string" }
+        },
+        "required": ["nome"]
+      },
+      "AuthLogin": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "example": "admin" },
+          "password": { "type": "string", "example": "admin123" }
+        },
+        "required": ["username", "password"]
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "example": "eyJhbGciOi..." },
+          "token_type": { "type": "string", "example": "Bearer" },
+          "expires_in": { "type": "string", "example": "1h" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "erro": { "type": "string", "example": "Mensagem de erro detalhada" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Gerar token JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthLogin" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token gerado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais inválidas",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/produtos": {
+      "get": {
+        "tags": ["Produtos"],
+        "summary": "Listar produtos cadastrados",
+        "responses": {
+          "200": {
+            "description": "Lista de produtos retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Produto" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Produtos"],
+        "summary": "Criar novo produto",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProdutoInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produto criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Produto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validação (campos obrigatórios ausentes ou inválidos)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/produtos/{id}": {
+      "get": {
+        "tags": ["Produtos"],
+        "summary": "Obter produto pelo ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Produto encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Produto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Produto não encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Produtos"],
+        "summary": "Atualizar produto (PUT)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProdutoInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Produto atualizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Produto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Token inválido",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Produto não encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Produtos"],
+        "summary": "Atualização parcial de produto (PATCH)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProdutoInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Produto parcialmente atualizado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Produto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Token inválido ou ausente",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Produtos"],
+        "summary": "Remover produto",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "204": { "description": "Produto removido com sucesso" },
+          "401": {
+            "description": "Token inválido ou expirado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Produto não encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
