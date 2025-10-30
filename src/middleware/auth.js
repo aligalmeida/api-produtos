@@ -15,7 +15,7 @@ function verificarJWT(req, res, next) {
     return res.status(401).json({ msg: 'Token inválido ou expirado' });
   }
 }
-
+// Middleware JWT - feature/middleware-auth-jwt
 module.exports = { verificarJWT };
 
 
