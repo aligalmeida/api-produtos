@@ -1,3 +1,4 @@
+// Schema Produto - feature/model-produto
 const mongoose = require('mongoose');
 
 const CATEGORIAS = ['frutas', 'bebidas', 'higiene', 'outros'];
